@@ -83,12 +83,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         observable = Observable.create(new Observable.OnSubscribe<String>() {
             @Override
             public void call(Subscriber<? super String> subscriber) {
+                //处理耗时操作，一般发生在工作线程由 subscribeOn(Schedulers.io()) 来决定工作线程
+                Log.i(TAG,"obserable threadName: "+ Thread.currentThread().getName());
                 subscriber.onNext("zhang sna");
                 subscriber.onNext("zhang sna2");
                 subscriber.onNext("zhang sna3");
                 subscriber.onCompleted();//kjkljljl
             }
         });
+        String[] names = {"s1","s2"};
+//        observable = Observable.from(names);
+//        observable = Observable.just(1,"s",3,0.1f);
 
 
     }
@@ -109,14 +114,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                observable.observeOn(AndroidSchedulers.mainThread())
+                /*observable.observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
-                        .subscribe(subscriber);
+                        .subscribe(subscriber);*/
                 //或者
                 Action1<String> nextAction = new Action1<String>() {
                     @Override
                     public void call(String s) {
-                        Log.i(TAG, "nextAction: " + s);
+                        //用于处理回调操作一般发生在主线程，用于界面显示 由此方法决定工作线程 observeOn(AndroidSchedulers.mainThread())
+                        String name = Thread.currentThread().getName();
+                        Log.i(TAG, "nextAction: " + s+",currentThread: "+ name);
                     }
                 };
                 Action1<Throwable> errorAction = new Action1<Throwable>() {
@@ -131,8 +138,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG,"completedAction");
                     }
                 };
-                observable.subscribe(nextAction);//订阅，将nextAction作为Next事件
-                observable.subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
+//                observable.subscribe(nextAction);//订阅，将nextAction作为Next事件
+
+                observable.subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
                 break;
         }
     }
