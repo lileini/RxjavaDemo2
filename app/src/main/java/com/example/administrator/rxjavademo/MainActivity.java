@@ -7,15 +7,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.administrator.rxjavademo.util.HttpMethods;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import okhttp3.ResponseBody;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -114,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
+                loginTest();
                 /*observable.observeOn(AndroidSchedulers.mainThread())
                         .subscribeOn(Schedulers.io())
                         .subscribe(subscriber);*/
@@ -140,10 +146,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 };
 //                observable.subscribe(nextAction);//订阅，将nextAction作为Next事件
 
-                observable.subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
+//                observable.subscribeOn(Schedulers.io())
+//                        .observeOn(AndroidSchedulers.mainThread())
+//                        .subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
+
                 break;
         }
+    }
+
+    private void loginTest() {
+        Subscriber<ResponseBody> subscriber = new Subscriber<ResponseBody>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                Log.i(TAG,"throwable: "+ throwable.toString());
+            }
+
+            @Override
+            public void onNext(ResponseBody responseBody) {
+                try {
+                    Log.i(TAG,"success : "+ responseBody.string());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.i(TAG,"analysis fail");
+                }
+            }
+        };
+        //        HttpMethods.getInstance().upLoadImge(subscriber,orderBean.getId()+"", DictionaryTool.getToken(this), map);
+        Map<String,String> maps = new HashMap<>(2);
+        maps.put("phone","18780224529");
+        maps.put("password","123456");
+        HttpMethods.getInstance().loginWithPwd(subscriber,maps);
     }
 }
