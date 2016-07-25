@@ -33,4 +33,14 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
     compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+
+    //log util
+    compile 'com.orhanobut:logger:1.15'
+    /**  调试使用  */
+
+    //test  使用google chrome://inspect 抓包  release 时去掉
+    compile 'com.facebook.stetho:stetho:1.3.1'
+    compile 'com.facebook.stetho:stetho-okhttp3:1.3.1'
+    compile 'com.facebook.stetho:stetho-urlconnection:1.3.1'
+    /**  调试使用  */
 }

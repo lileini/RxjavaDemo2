@@ -5,30 +5,34 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.administrator.rxjavademo.util.HttpMethods;
+import com.example.administrator.rxjavademo.util.LogUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
 import okhttp3.ResponseBody;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
 
-    @Bind(R.id.textView)
+    /*@Bind(R.id.textView)
     TextView textView;
     @Bind(R.id.button)
     Button button;
+    @Bind(R.id.btn_token)
+    Button button2;*/
     private String TAG = "MainActivity";
     private Observable<String> observable;
     private Subscriber<String> subscriber;
@@ -38,8 +42,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        initDate();
         initView();
+        initDate();
     }
 
     private void initDate() {
@@ -89,16 +93,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void call(Subscriber<? super String> subscriber) {
                 //处理耗时操作，一般发生在工作线程由 subscribeOn(Schedulers.io()) 来决定工作线程
-                Log.i(TAG,"obserable threadName: "+ Thread.currentThread().getName());
+                Log.i(TAG, "obserable threadName: " + Thread.currentThread().getName());
                 subscriber.onNext("zhang sna");
                 subscriber.onNext("zhang sna2");
                 subscriber.onNext("zhang sna3");
                 subscriber.onCompleted();//kjkljljl
             }
         });
-        String[] names = {"s1","s2"};
-//        observable = Observable.from(names);
-//        observable = Observable.just(1,"s",3,0.1f);
+        String[] names = {"s1", "s2"};
+        //        observable = Observable.from(names);
+        //        observable = Observable.just(1,"s",3,0.1f);
 
 
     }
@@ -106,6 +110,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initView() {
         Button button = (Button) findViewById(R.id.button);
         button.setOnClickListener(this);
+        Button button2 = (Button) findViewById(R.id.btn_token);
+        button2.setOnClickListener(this);
     }
 
     @Override
@@ -118,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
+
             case R.id.button:
                 loginTest();
                 /*observable.observeOn(AndroidSchedulers.mainThread())
@@ -129,29 +136,70 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     public void call(String s) {
                         //用于处理回调操作一般发生在主线程，用于界面显示 由此方法决定工作线程 observeOn(AndroidSchedulers.mainThread())
                         String name = Thread.currentThread().getName();
-                        Log.i(TAG, "nextAction: " + s+",currentThread: "+ name);
+                        Log.i(TAG, "nextAction: " + s + ",currentThread: " + name);
                     }
                 };
                 Action1<Throwable> errorAction = new Action1<Throwable>() {
                     @Override
                     public void call(Throwable throwable) {
-                        Log.i(TAG,"errorAction: "+ throwable.toString());
+                        Log.i(TAG, "errorAction: " + throwable.toString());
                     }
                 };
                 Action0 completedAction = new Action0() {
                     @Override
                     public void call() {
-                        Log.i(TAG,"completedAction");
+                        Log.i(TAG, "completedAction");
                     }
                 };
-//                observable.subscribe(nextAction);//订阅，将nextAction作为Next事件
+                //                observable.subscribe(nextAction);//订阅，将nextAction作为Next事件
 
-//                observable.subscribeOn(Schedulers.io())
-//                        .observeOn(AndroidSchedulers.mainThread())
-//                        .subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
+                //                observable.subscribeOn(Schedulers.io())
+                //                        .observeOn(AndroidSchedulers.mainThread())
+                //                        .subscribe(nextAction,errorAction,completedAction);//订阅，将nextAction作为Next事件.....
 
                 break;
+            case R.id.btn_token:
+
+                requestApplicationToken();
+                break;
+
         }
+    }
+//    @OnClick(R.id.button2)
+    private void requestApplicationToken() {
+        Toast.makeText(MainActivity.this, "R.id.button2", Toast.LENGTH_SHORT).show();
+        HttpMethods.getInstance().requestApplicationToken()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<ResponseBody>() {
+                    @Override
+                    public void onCompleted() {
+                        LogUtil.e(TAG,"onCompleted");
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        LogUtil.e(TAG, e.toString());
+                    }
+
+                    @Override
+                    public void onNext(ResponseBody responseBody) {
+                        LogUtil.e(TAG,"onNext");
+                        try {
+                            Log.i(TAG,"success: "+ responseBody.string());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            LogUtil.i(TAG,"success: "+ responseBody.string());
+                            LogUtil.json(TAG, responseBody.string());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
     }
 
     private void loginTest() {
@@ -163,23 +211,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onError(Throwable throwable) {
-                Log.i(TAG,"throwable: "+ throwable.toString());
+                Log.i(TAG, "throwable: " + throwable.toString());
             }
 
             @Override
             public void onNext(ResponseBody responseBody) {
                 try {
-                    Log.i(TAG,"success : "+ responseBody.string());
+                    Log.i(TAG, "success : " + responseBody.string());
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Log.i(TAG,"analysis fail");
+                    Log.i(TAG, "analysis fail");
                 }
             }
         };
         //        HttpMethods.getInstance().upLoadImge(subscriber,orderBean.getId()+"", DictionaryTool.getToken(this), map);
-        Map<String,String> maps = new HashMap<>(2);
-        maps.put("phone","18780224529");
-        maps.put("password","123456");
-        HttpMethods.getInstance().loginWithPwd(subscriber,maps);
+        Map<String, String> maps = new HashMap<>(2);
+        maps.put("phone", "18780224529");
+        maps.put("password", "123456");
+        HttpMethods.getInstance().loginWithPwd(subscriber, maps);
     }
 }

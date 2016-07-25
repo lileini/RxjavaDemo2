@@ -5,6 +5,8 @@ import java.util.Map;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.http.Body;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
@@ -27,4 +29,12 @@ public interface ApiService {
     @Headers("{CLIENT_TYPE:android}")
     @POST("users/login.json")
     Observable<ResponseBody> loginWithPWD(@Body Map<String, String> params);
+
+    @FormUrlEncoded
+    @Headers({"Content-Type:application/x-www-form-urlencoded",
+            "Authorization:Basic NjV1MEM5alFVTWs3dWZXaUJNMVlNREhHc0dBYTpadHdjbVE4VmkwNTgxZlp1V013TmQwbVBSdGdh"})
+    @POST("https://devais.pfingo.com:8243/token")
+
+    Observable<ResponseBody> getApplicationToken(/*@Header("Authorization") String base64Secert,*/
+                                                     @Field("grant_type") String p);
 }

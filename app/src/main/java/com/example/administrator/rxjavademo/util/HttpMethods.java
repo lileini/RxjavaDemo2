@@ -1,9 +1,17 @@
 package com.example.administrator.rxjavademo.util;
 
 
-import com.example.administrator.rxjavademo.net.ApiService;
-import com.example.administrator.rxjavademo.net.Net;
+import android.util.Base64;
+import android.util.Log;
 
+import com.example.administrator.rxjavademo.BuildConfig;
+import com.example.administrator.rxjavademo.net.ApiService;
+import com.example.administrator.rxjavademo.net.MyHostnameVerify;
+import com.example.administrator.rxjavademo.net.Net;
+import com.example.administrator.rxjavademo.net.SSLContextUtils;
+import com.facebook.stetho.okhttp3.StethoInterceptor;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -28,15 +36,22 @@ public class HttpMethods {
     private HttpMethods(){
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.connectTimeout(8, TimeUnit.SECONDS);
+        builder.connectTimeout(8, TimeUnit.SECONDS)
+            .sslSocketFactory(SSLContextUtils.getSSLContext().getSocketFactory())
+
+            .hostnameVerifier(new MyHostnameVerify());
+        if(BuildConfig.DEBUG){
+            builder.addNetworkInterceptor(new StethoInterceptor());
+        }
        retrofit = new Retrofit.Builder()
-               .baseUrl(Net.HOST_URL)
+               .baseUrl(Net.AIS_BASE_URL)
                .client(builder.build())
 //               .addConverterFactory(Con)
                .addConverterFactory(GsonConverterFactory.create())
                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
                .build();
         apiService = retrofit.create(ApiService.class);
+
     }
     private static class SingletonHolder{
         private final static HttpMethods instance = new HttpMethods();
@@ -82,5 +97,27 @@ public class HttpMethods {
 
     public void loginWithPwd(Subscriber<ResponseBody> subscriber,Map<String,String> params){
         toSubscribe(apiService.loginWithPWD(params),subscriber);
+    }
+
+    public Observable<ResponseBody> requestApplicationToken(){
+        Map<String,String> params = new HashMap<>();
+        params.put("grant_type", "client_credentials");
+        params.put("","");
+        String base64Sercet= "Basic " + Base64.encodeToString(Net.AIS_BASE64.getBytes(),Base64.DEFAULT);
+        Log.i("request",base64Sercet);
+//        return apiService.getApplicationToken(base64Sercet,params);
+        return apiService.getApplicationToken(/*base64Sercet,*/"client_credentials");/*.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Log.i("onResponse",response.message());
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                LogUtil.e("onFailure",t.getMessage());
+                t.printStackTrace();
+            }
+        });*/
+
     }
 }
